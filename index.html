@@ -8,124 +8,344 @@
 <title>笋 · 计数器</title>
 <style>
 :root{color-scheme:dark;--bg:#0b1020;--panel:#151d30;--muted:#9aa7bd;--line:#29344b;--accent:#a3e635;--text:#f3f6fb}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#101a2d,#090d18 65%);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
-main{max-width:620px;margin:auto;padding:24px 18px 48px}.top{display:flex;justify-content:space-between;align-items:center;margin:8px 0 22px}.eyebrow{font-size:11px;letter-spacing:2px;color:var(--muted)}h1{font-size:27px;margin:5px 0}.pill{border:1px solid #3b4a60;border-radius:30px;padding:7px 11px;color:var(--accent);font-size:12px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}.panel{background:rgba(21,29,48,.92);border:1px solid var(--line);border-radius:18px;padding:17px;margin-bottom:14px}.label{color:var(--muted);font-size:13px}.big{font-size:34px;font-weight:700;margin-top:7px}.unit{font-size:13px;color:var(--muted);font-weight:400}
-h2{font-size:16px;margin:0 0 15px}label{display:block;color:var(--muted);font-size:13px;margin:12px 0 7px}input{width:100%;background:#0d1424;border:1px solid #35415a;border-radius:11px;padding:13px;color:white;font-size:16px}
-button{border:0;border-radius:12px;padding:13px 15px;font-size:15px;font-weight:650;cursor:pointer}.primary{background:var(--accent);color:#17210b;width:100%;margin-top:14px}.secondary{background:#26334a;color:#e9eff8}.danger{background:transparent;color:#ff9b9b;padding:8px}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.toolbar button{font-size:13px;padding:10px 12px}
-#chart{width:100%;height:220px;display:block;overflow:visible}.chart-note{font-size:12px;color:var(--muted);margin-top:4px}.entry{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:13px 0}.entry:first-of-type{border-top:0}.entry strong{font-size:19px}.entry small{display:block;color:var(--muted);margin-top:3px}.empty{color:var(--muted);text-align:center;padding:24px 0;font-size:14px}.foot{font-size:11px;color:#8491a8;line-height:1.6;margin:16px 2px}
-
-/* iPhone 日期框精准修复 */
-.panel {
-  min-width: 0;
-}
-
-#date {
-  display: block;
-  width: 100% !important;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-/* 隐藏数据备份卡片 */
-section.panel:has(#export) {
-  display: none !important;
-}
-
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(160deg,#101a2d,#090d18 65%);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+main{max-width:620px;margin:auto;padding:24px 18px 48px}
+.top{display:flex;justify-content:space-between;align-items:center;margin:8px 0 22px}
+.eyebrow{font-size:11px;letter-spacing:2px;color:var(--muted)}
+h1{font-size:27px;margin:5px 0}
+.pill{border:1px solid #3b4a60;border-radius:30px;padding:7px 11px;color:var(--accent);font-size:12px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.panel{background:rgba(21,29,48,.92);border:1px solid var(--line);border-radius:18px;padding:17px;margin-bottom:14px;min-width:0}
+.label{color:var(--muted);font-size:13px}
+.big{font-size:34px;font-weight:700;margin-top:7px}
+.unit{font-size:13px;color:var(--muted);font-weight:400}
+h2{font-size:16px;margin:0 0 15px}
+label{display:block;color:var(--muted);font-size:13px;margin:12px 0 7px}
+input{width:100%;min-width:0;background:#0d1424;border:1px solid #35415a;border-radius:11px;padding:13px;color:white;font-size:16px}
+button{border:0;border-radius:12px;padding:13px 15px;font-size:15px;font-weight:650;cursor:pointer}
+.primary{background:var(--accent);color:#17210b;width:100%;margin-top:14px}
+.secondary{background:#26334a;color:#e9eff8}
+.danger{background:transparent;color:#ff9b9b;padding:8px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.toolbar button{font-size:13px;padding:10px 12px}
+#chart,#rateChart{width:100%;height:220px;display:block;overflow:visible}
+.chart-note{font-size:12px;color:var(--muted);margin-top:4px}
+.chart-title{font-size:13px;color:var(--muted);margin:14px 0 4px}
+.entry{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:13px 0;gap:8px}
+.entry:first-of-type{border-top:0}
+.entry strong{font-size:19px;white-space:nowrap}
+.entry small{display:block;color:var(--muted);margin-top:4px;line-height:1.5}
+.empty{color:var(--muted);text-align:center;padding:24px 0;font-size:14px}
+.foot{font-size:11px;color:#8491a8;line-height:1.6;margin:16px 2px}
+#date{display:block;width:100%!important;max-width:100%;min-width:0;-webkit-appearance:none;appearance:none}
+details summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:15px;font-weight:650}
+details summary::-webkit-details-marker{display:none}
+details summary:after{content:"＋";color:var(--accent);font-size:18px}
+details[open] summary:after{content:"－"}
+.bamboo-summary{font-size:12px;color:var(--muted);font-weight:400}
+.bamboo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bamboo-field label{margin:12px 0 7px}
+.bamboo-field input{padding:11px}
+.bamboo-total{display:flex;justify-content:space-between;align-items:center;margin-top:17px;padding-top:14px;border-top:1px solid var(--line)}
+.bamboo-help{font-size:12px;color:var(--muted);line-height:1.6;margin:12px 0}
+@media(max-width:360px){main{padding-left:12px;padding-right:12px}.panel{padding:14px}.bamboo-grid{gap:8px}}
+/* 保留原版的隐藏备份卡片设置；备份功能仍可通过代码启用 */
+section.panel:has(#export){display:none!important}
 </style>
 </head>
-<body><main>
-<header class="top"><div><div class="eyebrow">DAILY TRACKER</div><h1>笋 · 计数器</h1></div><div class="pill">自动保存已开启</div></header>
+<body>
+<main>
+<header class="top">
+ <div><div class="eyebrow">DAILY TRACKER</div><h1>笋 · 计数器</h1></div>
+ <div class="pill">自动保存已开启</div>
+</header>
+
 <section class="stats">
  <div class="panel"><div class="label">累计总数</div><div class="big" id="total">0 <span class="unit">笋</span></div></div>
  <div class="panel"><div class="label">记录天数</div><div class="big" id="days">0 <span class="unit">天</span></div></div>
 </section>
+
 <section class="panel">
  <h2>新增记录</h2>
  <label for="date">日期</label><input id="date" type="date">
  <label for="amount">本次增加数量（笋）</label><input id="amount" type="number" min="1" step="1" inputmode="numeric" placeholder="请输入今天的数量">
  <button class="primary" id="add">＋ 保存这次记录</button>
 </section>
+
 <section class="panel">
- <h2>每日变化趋势</h2><svg id="chart" viewBox="0 0 560 220" role="img" aria-label="每日笋数量折线图"></svg>
- <div class="chart-note">横轴：日期　·　纵轴：每日累计（笋）</div>
+ <details id="bambooDetails">
+  <summary><span>竹林片数设置</span><span class="bamboo-summary" id="bambooSummary">尚未设置</span></summary>
+  <p class="bamboo-help">填写六个地方的竹林片数。保存后自动记住；以后数量没有变化时，不需要重复输入。</p>
+  <div class="bamboo-grid">
+   <div class="bamboo-field"><label for="bamboo-huizhou">徽州府</label><input id="bamboo-huizhou" type="number" min="0" step="1" inputmode="numeric" placeholder="竹林片数"></div>
+   <div class="bamboo-field"><label for="bamboo-ningbo">宁波府</label><input id="bamboo-ningbo" type="number" min="0" step="1" inputmode="numeric" placeholder="竹林片数"></div>
+   <div class="bamboo-field"><label for="bamboo-shaoxing">绍兴府</label><input id="bamboo-shaoxing" type="number" min="0" step="1" inputmode="numeric" placeholder="竹林片数"></div>
+   <div class="bamboo-field"><label for="bamboo-hangzhou">杭州府</label><input id="bamboo-hangzhou" type="number" min="0" step="1" inputmode="numeric" placeholder="竹林片数"></div>
+   <div class="bamboo-field"><label for="bamboo-longgong">龙宫</label><input id="bamboo-longgong" type="number" min="0" step="1" inputmode="numeric" placeholder="竹林片数"></div>
+   <div class="bamboo-field"><label for="bamboo-yuhang">余杭县</label><input id="bamboo-yuhang" type="number" min="0" step="1" inputmode="numeric" placeholder="竹林片数"></div>
+  </div>
+  <div class="bamboo-total"><span class="label">竹林片数总和</span><strong id="bambooTotal">尚未设置</strong></div>
+  <button class="secondary" id="saveBamboo" style="width:100%;margin-top:15px">保存竹林片数</button>
+ </details>
 </section>
+
 <section class="panel">
- <h2>历史记录</h2><div id="history"></div>
+ <h2>每日变化趋势</h2>
+ <div class="chart-title">每日笋数量</div>
+ <svg id="chart" viewBox="0 0 560 220" role="img" aria-label="每日笋数量折线图"></svg>
+ <div class="chart-note">横轴：日期　·　纵轴：每日获得笋数量</div>
+ <div class="chart-title">每日笋掉落率</div>
+ <svg id="rateChart" viewBox="0 0 560 220" role="img" aria-label="每日笋掉落率折线图"></svg>
+ <div class="chart-note">横轴：日期　·　纵轴：竹林片数 ÷ 当日笋数量</div>
 </section>
+
+<section class="panel"><h2>历史记录</h2><div id="history"></div></section>
+
 <section class="panel">
- <h2>数据备份</h2><div class="toolbar">
- <button class="secondary" id="export">导出备份 JSON</button>
- <button class="secondary" id="importBtn">导入备份</button>
- <input id="importFile" type="file" accept="application/json,.json" hidden>
- </div><p class="foot">记录保存在当前浏览器的本机数据库中。请定期导出备份；清除浏览器网站数据、卸载浏览器或更换设备前，先导出备份。</p>
+ <h2>数据备份</h2>
+ <div class="toolbar">
+  <button class="secondary" id="export">导出备份 JSON</button>
+  <button class="secondary" id="importBtn">导入备份</button>
+  <input id="importFile" type="file" accept="application/json,.json" hidden>
+ </div>
+ <p class="foot">记录保存在当前浏览器的本机数据库中。请定期导出备份；更换设备或浏览器前，请先导出备份。</p>
 </section>
 <p class="foot">离线可用。首次安装需通过 HTTPS 网站打开，然后使用浏览器菜单中的“添加到主屏幕”。</p>
 </main>
+
 <script>
-const DB_NAME='shun-counter-db', STORE='daily';
-let db;
+'use strict';
+const DB_NAME='shun-counter-db', STORE='daily', SETTINGS_STORE='settings';
+const PLACES=[
+ {id:'huizhou',name:'徽州府'},
+ {id:'ningbo',name:'宁波府'},
+ {id:'shaoxing',name:'绍兴府'},
+ {id:'hangzhou',name:'杭州府'},
+ {id:'longgong',name:'龙宫'},
+ {id:'yuhang',name:'余杭县'}
+];
+let db=null, bambooCounts=null;
 const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 $('date').value=today();
-function openDB(){
-  return new Promise((resolve,reject)=>{
-    const req=indexedDB.open(DB_NAME,1);
 
-    req.onupgradeneeded=()=>{
-      const d=req.result;
-      if(!d.objectStoreNames.contains(STORE)){
-        d.createObjectStore(STORE,{keyPath:'date'});
-      }
-    };
-
-    req.onsuccess=()=>{
-      resolve(req.result);
-    };
-
-    req.onerror=()=>{
-      console.error('数据库打开错误：',req.error);
-      reject(req.error);
-    };
-
-    req.onblocked=()=>{
-      console.error('数据库打开被阻塞');
-    };
-
-    req.onabort=()=>{
-      console.error('数据库打开被中止');
-    };
-  });
+function validCounts(obj){
+ return !!obj && typeof obj==='object' && PLACES.every(p=>Number.isSafeInteger(obj[p.id])&&obj[p.id]>=0);
 }
-function all(){return new Promise((resolve,reject)=>{const req=db.transaction(STORE,'readonly').objectStore(STORE).getAll();req.onsuccess=()=>resolve(req.result.sort((a,b)=>a.date.localeCompare(b.date)));req.onerror=()=>reject(req.error);});}
-function put(row){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(row);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
-function del(date){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(date);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
-function svgEl(tag,attrs={},text=''){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));if(text)e.textContent=text;return e;}
+function countTotal(obj){return PLACES.reduce((sum,p)=>sum+obj[p.id],0)}
+function openDB(){
+ return new Promise((resolve,reject)=>{
+  const req=indexedDB.open(DB_NAME,2);
+  req.onupgradeneeded=()=>{
+   const d=req.result;
+   if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'date'});
+   if(!d.objectStoreNames.contains(SETTINGS_STORE))d.createObjectStore(SETTINGS_STORE,{keyPath:'id'});
+  };
+  req.onsuccess=()=>{db=req.result;db.onversionchange=()=>db.close();resolve(db)};
+  req.onerror=()=>reject(req.error);
+  req.onblocked=()=>console.warn('数据库升级被阻塞：请关闭其他打开的笋计数器页面后重试');
+ });
+}
+function all(){
+ return new Promise((resolve,reject)=>{
+  const req=db.transaction(STORE,'readonly').objectStore(STORE).getAll();
+  req.onsuccess=()=>resolve(req.result.sort((a,b)=>a.date.localeCompare(b.date)));
+  req.onerror=()=>reject(req.error);
+ });
+}
+function put(row){
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE,'readwrite');
+  tx.objectStore(STORE).put(row);
+  tx.oncomplete=()=>resolve();
+  tx.onerror=()=>reject(tx.error);
+  tx.onabort=()=>reject(tx.error||new Error('保存记录失败'));
+ });
+}
+function del(date){
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE,'readwrite');
+  tx.objectStore(STORE).delete(date);
+  tx.oncomplete=()=>resolve();
+  tx.onerror=()=>reject(tx.error);
+ });
+}
+function getSettings(){
+ return new Promise((resolve,reject)=>{
+  const req=db.transaction(SETTINGS_STORE,'readonly').objectStore(SETTINGS_STORE).get('bambooCounts');
+  req.onsuccess=()=>resolve(req.result?.values||null);
+  req.onerror=()=>reject(req.error);
+ });
+}
+function saveSettings(values){
+ return new Promise((resolve,reject)=>{
+  const tx=db.transaction(SETTINGS_STORE,'readwrite');
+  tx.objectStore(SETTINGS_STORE).put({id:'bambooCounts',values});
+  tx.oncomplete=()=>resolve();
+  tx.onerror=()=>reject(tx.error);
+ });
+}
+function svgEl(tag,attrs={},text=''){
+ const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+ Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));
+ if(text)el.textContent=text;
+ return el;
+}
+function formatRate(value){return Number.isFinite(value)?value.toFixed(2):'—'}
+
+function updateBambooSummary(){
+ if(!bambooCounts){
+  $('bambooSummary').textContent='尚未设置';
+  $('bambooTotal').textContent='尚未设置';
+  return;
+ }
+ const total=countTotal(bambooCounts);
+ $('bambooSummary').textContent=`已保存 · ${total} 片`;
+ $('bambooTotal').textContent=`${total} 片`;
+}
+function fillBambooInputs(){
+ PLACES.forEach(p=>{$('bamboo-'+p.id).value=bambooCounts?bambooCounts[p.id]:''});
+ updateBambooSummary();
+}
+function readBambooInputs(){
+ const values={};
+ for(const p of PLACES){
+  const raw=$('bamboo-'+p.id).value.trim();
+  if(raw===''||!/^\d+$/.test(raw))throw new Error(`请填写${p.name}的竹林片数，必须是非负整数`);
+  const n=Number(raw);
+  if(!Number.isSafeInteger(n))throw new Error(`${p.name}的数量超出有效范围`);
+  values[p.id]=n;
+ }
+ return values;
+}
+
 async function render(){
- const rows=await all(),total=rows.reduce((s,r)=>s+r.count,0);
- $('total').innerHTML=`${total} <span class="unit">笋</span>`;$('days').innerHTML=`${rows.length} <span class="unit">天</span>`;
- const hist=$('history');hist.innerHTML='';
+ const rows=await all();
+ const total=rows.reduce((sum,r)=>sum+r.count,0);
+ $('total').innerHTML=`${total} <span class="unit">笋</span>`;
+ $('days').innerHTML=`${rows.length} <span class="unit">天</span>`;
+ const hist=$('history');
+ hist.innerHTML='';
  if(!rows.length)hist.innerHTML='<div class="empty">还没有记录，添加第一条吧</div>';
- [...rows].reverse().forEach(r=>{const div=document.createElement('div');div.className='entry';const left=document.createElement('div');left.innerHTML=`<b>${r.date}</b><small>当日累计</small>`;const right=document.createElement('div');right.style.display='flex';right.style.alignItems='center';const val=document.createElement('strong');val.textContent=`${r.count} 笋`;const b=document.createElement('button');b.className='danger';b.textContent='删除';b.onclick=async()=>{if(confirm(`删除 ${r.date} 的记录？`)){await del(r.date);render();}};right.append(val,b);div.append(left,right);hist.append(div);});
+ [...rows].reverse().forEach(r=>{
+  const div=document.createElement('div');div.className='entry';
+  const left=document.createElement('div');
+  const detail=Number.isFinite(r.dropRate)&&Number.isFinite(r.bambooTotal)
+   ?`竹林总数 ${r.bambooTotal} 片 · 掉落率 ${formatRate(r.dropRate)}`
+   :'竹林片数未记录';
+  const date=document.createElement('b');date.textContent=r.date;
+  const small=document.createElement('small');small.textContent=`当日累计 · ${detail}`;
+  left.append(date,small);
+  const right=document.createElement('div');right.style.display='flex';right.style.alignItems='center';
+  const val=document.createElement('strong');val.textContent=`${r.count} 笋`;
+  const button=document.createElement('button');button.className='danger';button.textContent='删除';
+  button.onclick=async()=>{if(confirm(`删除 ${r.date} 的记录？`)){await del(r.date);await render()}};
+  right.append(val,button);div.append(left,right);hist.append(div);
+ });
  draw(rows);
+ drawRate(rows);
 }
 function draw(rows){
- const svg=$('chart');svg.innerHTML='';const W=560,H=220,L=48,R=16,T=14,B=38,pw=W-L-R,ph=H-T-B;
- if(!rows.length){svg.append(svgEl('text',{x:W/2,y:110,'text-anchor':'middle',fill:'#9aa7bd','font-size':14},'添加记录后显示趋势'));return;}
+ const svg=$('chart');svg.innerHTML='';
+ const W=560,H=220,L=48,R=16,T=14,B=38,pw=W-L-R,ph=H-T-B;
+ if(!rows.length){svg.append(svgEl('text',{x:W/2,y:110,'text-anchor':'middle',fill:'#9aa7bd','font-size':14},'添加记录后显示趋势'));return}
  const max=Math.max(1,...rows.map(r=>r.count)),top=Math.ceil(max/5)*5||1;
- for(let i=0;i<=4;i++){const y=T+ph*i/4,val=Math.round(top*(1-i/4));svg.append(svgEl('line',{x1:L,y1:y,x2:W-R,y2:y,stroke:'#29344b','stroke-width':1}));svg.append(svgEl('text',{x:L-9,y:y+4,'text-anchor':'end',fill:'#9aa7bd','font-size':11},String(val)));}
+ for(let i=0;i<=4;i++){
+  const y=T+ph*i/4,val=Math.round(top*(1-i/4));
+  svg.append(svgEl('line',{x1:L,y1:y,x2:W-R,y2:y,stroke:'#29344b','stroke-width':1}));
+  svg.append(svgEl('text',{x:L-9,y:y+4,'text-anchor':'end',fill:'#9aa7bd','font-size':11},String(val)));
+ }
  const pts=rows.map((r,i)=>({x:rows.length===1?L+pw/2:L+pw*i/(rows.length-1),y:T+ph*(1-r.count/top),r}));
  if(pts.length>1)svg.append(svgEl('polyline',{points:pts.map(p=>`${p.x},${p.y}`).join(' '),fill:'none',stroke:'#a3e635','stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'}));
- pts.forEach(p=>{svg.append(svgEl('circle',{cx:p.x,cy:p.y,r:4.5,fill:'#a3e635',stroke:'#151d30','stroke-width':2}));});
+ pts.forEach(p=>svg.append(svgEl('circle',{cx:p.x,cy:p.y,r:4.5,fill:'#a3e635',stroke:'#151d30','stroke-width':2})));
  const labels=rows.length<=7?rows:rows.filter((_,i)=>i===0||i===rows.length-1||i%Math.ceil(rows.length/5)===0);
- labels.forEach(r=>{const idx=rows.indexOf(r),x=pts[idx].x;svg.append(svgEl('text',{x,y:H-12,'text-anchor':'middle',fill:'#9aa7bd','font-size':10},r.date.slice(5)));});
+ labels.forEach(r=>{const x=pts[rows.indexOf(r)].x;svg.append(svgEl('text',{x,y:H-12,'text-anchor':'middle',fill:'#9aa7bd','font-size':10},r.date.slice(5)))});
 }
-$('add').onclick=async()=>{const date=$('date').value,n=Number($('amount').value);if(!date||!Number.isInteger(n)||n<=0){alert('请输入有效日期和正整数数量');return;}const rows=await all(),old=rows.find(r=>r.date===date);await put({date,count:(old?.count||0)+n});$('amount').value='';await render();};
-$('export').onclick=async()=>{const data={app:'shun-counter',version:1,exportedAt:new Date().toISOString(),records:await all()};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`笋计数备份-${today()}.json`;a.click();URL.revokeObjectURL(a.href);};
+function drawRate(rows){
+ const svg=$('rateChart');svg.innerHTML='';
+ const W=560,H=220,L=58,R=16,T=14,B=38,pw=W-L-R,ph=H-T-B;
+ const valid=rows.filter(r=>Number.isFinite(r.dropRate)&&r.dropRate>=0);
+ if(!valid.length){svg.append(svgEl('text',{x:W/2,y:110,'text-anchor':'middle',fill:'#9aa7bd','font-size':14},'保存竹林片数后显示掉落率趋势'));return}
+ const max=Math.max(0,...valid.map(r=>r.dropRate));
+ const top=Math.max(0.04,Math.ceil(max*25)/25);
+ for(let i=0;i<=4;i++){
+  const y=T+ph*i/4,val=top*(1-i/4);
+  svg.append(svgEl('line',{x1:L,y1:y,x2:W-R,y2:y,stroke:'#29344b','stroke-width':1}));
+  svg.append(svgEl('text',{x:L-8,y:y+4,'text-anchor':'end',fill:'#9aa7bd','font-size':10},val.toFixed(2)));
+ }
+ const pts=valid.map((r,i)=>({x:valid.length===1?L+pw/2:L+pw*i/(valid.length-1),y:T+ph*(1-r.dropRate/top),r}));
+ if(pts.length>1)svg.append(svgEl('polyline',{points:pts.map(p=>`${p.x},${p.y}`).join(' '),fill:'none',stroke:'#38bdf8','stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'}));
+ pts.forEach(p=>svg.append(svgEl('circle',{cx:p.x,cy:p.y,r:4.5,fill:'#38bdf8',stroke:'#151d30','stroke-width':2})));
+ const labels=valid.length<=7?valid:valid.filter((_,i)=>i===0||i===valid.length-1||i%Math.ceil(valid.length/5)===0);
+ labels.forEach(r=>{const x=pts[valid.indexOf(r)].x;svg.append(svgEl('text',{x,y:H-12,'text-anchor':'middle',fill:'#9aa7bd','font-size':10},r.date.slice(5)))});
+}
+
+$('saveBamboo').onclick=async()=>{
+ try{
+  const values=readBambooInputs();
+  await saveSettings(values);
+  bambooCounts=values;
+  updateBambooSummary();
+  $('bambooDetails').open=false;
+  alert('竹林片数保存成功！以后新增记录会自动使用这组数据。');
+ }catch(e){alert(e.message)}
+};
+
+$('add').onclick=async()=>{
+ try{
+  const date=$('date').value,n=Number($('amount').value);
+  if(!date||!Number.isSafeInteger(n)||n<=0){alert('请输入有效日期和正整数数量');return}
+  const rows=await all(),old=rows.find(r=>r.date===date);
+  const newCount=(old?.count||0)+n;
+  // 已有日期保留原快照；旧记录没有快照时，不把当前竹林数追溯填入过去。
+  const snapshot=validCounts(old?.bambooCounts)?old.bambooCounts:(old?null:bambooCounts);
+  const record={date,count:newCount,bambooCounts:snapshot?{...snapshot}:null,bambooTotal:null,dropRate:null};
+  if(snapshot){
+   const total=countTotal(snapshot);
+   record.bambooTotal=total;
+   record.dropRate=total/newCount;
+  }
+  await put(record);
+  $('amount').value='';
+  await render();
+ }catch(e){alert('保存失败：'+e.message)}
+};
+
+$('export').onclick=async()=>{
+ const data={app:'shun-counter',version:2,exportedAt:new Date().toISOString(),records:await all(),settings:{bambooCounts}};
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=`笋计数备份-${today()}.json`;a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
 $('importBtn').onclick=()=>$('importFile').click();
-$('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const obj=JSON.parse(await f.text());if(!Array.isArray(obj.records)||!obj.records.every(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&Number.isInteger(r.count)&&r.count>0))throw Error();if(!confirm('导入将合并备份记录；相同日期以备份中的数量覆盖。继续？'))return;for(const r of obj.records)await put(r);await render();alert('导入完成');}catch{alert('备份文件格式不正确');}finally{e.target.value='';}};
-(async()=>{db=await openDB();await render();if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});})().catch(e=>alert('数据库无法启动：'+e.message));
-</script></body></html>
+$('importFile').onchange=async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{
+  const obj=JSON.parse(await file.text());
+  if(!Array.isArray(obj.records)||!obj.records.every(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&Number.isSafeInteger(r.count)&&r.count>0))throw new Error('备份文件格式不正确');
+  if(!confirm('导入将合并备份记录；相同日期以备份中的记录覆盖。继续？'))return;
+  for(const r of obj.records)await put(r);
+  if(validCounts(obj.settings?.bambooCounts)){
+   await saveSettings(obj.settings.bambooCounts);
+   bambooCounts=obj.settings.bambooCounts;
+   fillBambooInputs();
+  }
+  await render();alert('导入完成');
+ }catch(err){alert(err.message||'备份文件格式不正确')}
+ finally{e.target.value=''}
+};
+
+(async()=>{
+ db=await openDB();
+ bambooCounts=await getSettings();
+ fillBambooInputs();
+ await render();
+ if('serviceWorker'in navigator&&location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+ }
+})().catch(e=>{console.error(e);alert('数据库无法启动：'+e.message)});
+</script>
+</body>
+</html>
