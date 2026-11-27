@@ -71,7 +71,35 @@ let db;
 const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 $('date').value=today();
-function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'date'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,1);
+
+    req.onupgradeneeded=()=>{
+      const d=req.result;
+      if(!d.objectStoreNames.contains(STORE)){
+        d.createObjectStore(STORE,{keyPath:'date'});
+      }
+    };
+
+    req.onsuccess=()=>{
+      resolve(req.result);
+    };
+
+    req.onerror=()=>{
+      console.error('数据库打开错误：',req.error);
+      reject(req.error);
+    };
+
+    req.onblocked=()=>{
+      console.error('数据库打开被阻塞');
+    };
+
+    req.onabort=()=>{
+      console.error('数据库打开被中止');
+    };
+  });
+}
 function all(){return new Promise((resolve,reject)=>{const req=db.transaction(STORE,'readonly').objectStore(STORE).getAll();req.onsuccess=()=>resolve(req.result.sort((a,b)=>a.date.localeCompare(b.date)));req.onerror=()=>reject(req.error);});}
 function put(row){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(row);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
 function del(date){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(date);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
