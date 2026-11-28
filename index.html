@@ -290,54 +290,88 @@ $('saveBamboo').onclick=async()=>{
  }catch(e){alert(e.message)}
 };
 
+
 $('add').onclick=async()=>{
  try{
   const date=$('date').value;
   const raw=$('amount').value.trim();
+
   if(!date||raw===''||!/^\d+$/.test(raw)){
    alert('请输入有效日期和游戏当前显示的累计笋数');
    return;
   }
+
   const cumulative=Number(raw);
+
   if(!Number.isSafeInteger(cumulative)){
    alert('累计笋数超出有效范围');
    return;
   }
 
   const rows=await all();
-  // 用所选日期之前所有记录的每日新增数，重建此前的累计数。
-  // 这样原有历史记录无需迁移，也不会丢失。
-  const previousTotal=rows
-   .filter(r=>r.date<date)
-   .reduce((sum,r)=>sum+r.count,0);
 
+  // 找到所选日期之前最近的一条记录
+  const previousRows=rows.filter(r=>r.date<date);
+  const previousRecord=previousRows.length
+   ?previousRows[previousRows.length-1]
+   :null;
+
+  // 优先读取上次保存的游戏累计数量。
+  // 旧版本没有该字段时，用历史每日新增数量计算。
+  const previousTotal=previousRecord
+   ?(
+      Number.isSafeInteger(previousRecord.cumulative)
+      ?previousRecord.cumulative
+      :previousRows.reduce((sum,r)=>sum+r.count,0)
+    )
+   :0;
+
+  // 自动计算今日实际新增数量
   const todayIncrease=cumulative-previousTotal;
+
   if(todayIncrease<0){
-   alert(`当前累计数 ${cumulative} 小于此前记录累计数 ${previousTotal}，请检查日期或游戏数量。`);
+   alert(
+    `当前累计数 ${cumulative} 小于上次累计数 ${previousTotal}。\n\n请检查游戏数量或日期，暂时没有保存记录。`
+   );
    return;
   }
 
+  // 保留当天原有的竹林片数设置
   const old=rows.find(r=>r.date===date);
-  // 同一天再次保存时，直接更新当天记录，不重复累加。
-  const snapshot=validCounts(old?.bambooCounts)?old.bambooCounts:(old?null:bambooCounts);
+  const snapshot=validCounts(old?.bambooCounts)
+   ?old.bambooCounts
+   :(old?null:bambooCounts);
+
   const record={
    date,
    count:todayIncrease,
+   cumulative:cumulative,
    bambooCounts:snapshot?{...snapshot}:null,
    bambooTotal:null,
    dropRate:null
   };
+
   if(snapshot){
    const total=countTotal(snapshot);
    record.bambooTotal=total;
-   record.dropRate=todayIncrease>0?total/todayIncrease:null;
+   record.dropRate=todayIncrease>0
+    ?total/todayIncrease
+    :null;
   }
 
+  // 同一天再次保存时，覆盖当天记录，不重复累加
   await put(record);
+
+  // 保存成功后清空输入框
   $('amount').value='';
+
   await render();
-  alert(`保存成功！今日新增 ${todayIncrease} 笋。`);
- }catch(e){alert('保存失败：'+e.message)}
+
+  alert(`保存成功！\n今日实际新增 ${todayIncrease} 笋。`);
+
+ }catch(e){
+  alert('保存失败：'+e.message);
+ }
 };
 
 $('export').onclick=async()=>{
