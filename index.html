@@ -33,7 +33,6 @@ button{border:0;border-radius:12px;padding:13px 15px;font-size:15px;font-weight:
 .chart-note{font-size:12px;color:var(--muted);margin-top:4px}
 .chart-title{font-size:13px;color:var(--muted);margin:14px 0 4px}
 .entry{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:13px 0;gap:8px}
-.entry:first-of-type{border-top:0}
 .entry strong{font-size:19px;white-space:nowrap}
 .entry small{display:block;color:var(--muted);margin-top:4px;line-height:1.5}
 .empty{color:var(--muted);text-align:center;padding:24px 0;font-size:14px}
@@ -50,7 +49,6 @@ details[open] summary:after{content:"－"}
 .bamboo-total{display:flex;justify-content:space-between;align-items:center;margin-top:17px;padding-top:14px;border-top:1px solid var(--line)}
 .bamboo-help{font-size:12px;color:var(--muted);line-height:1.6;margin:12px 0}
 @media(max-width:360px){main{padding-left:12px;padding-right:12px}.panel{padding:14px}.bamboo-grid{gap:8px}}
-/* 保留原版的隐藏备份卡片设置；备份功能仍可通过代码启用 */
 section.panel:has(#export){display:none!important}
 </style>
 </head>
@@ -69,8 +67,8 @@ section.panel:has(#export){display:none!important}
 <section class="panel">
  <h2>新增记录</h2>
  <label for="date">日期</label><input id="date" type="date">
- <label for="amount">本次增加数量（笋）</label><input id="amount" type="number" min="1" step="1" inputmode="numeric" placeholder="请输入今天的数量">
- <button class="primary" id="add">＋ 保存这次记录</button>
+ <label for="amount">游戏当前累计笋数</label><input id="amount" type="number" min="0" step="1" inputmode="numeric" placeholder="请输入游戏显示的累计数量">
+ <button class="primary" id="add">＋ 保存记录</button>
 </section>
 
 <section class="panel">
@@ -235,7 +233,7 @@ async function render(){
    ?`竹林总数 ${r.bambooTotal} 片 · 掉落率 ${formatRate(r.dropRate)}`
    :'竹林片数未记录';
   const date=document.createElement('b');date.textContent=r.date;
-  const small=document.createElement('small');small.textContent=`当日累计 · ${detail}`;
+  const small=document.createElement('small');small.textContent=`今日新增 · ${detail}`;
   left.append(date,small);
   const right=document.createElement('div');right.style.display='flex';right.style.alignItems='center';
   const val=document.createElement('strong');val.textContent=`${r.count} 笋`;
@@ -294,21 +292,51 @@ $('saveBamboo').onclick=async()=>{
 
 $('add').onclick=async()=>{
  try{
-  const date=$('date').value,n=Number($('amount').value);
-  if(!date||!Number.isSafeInteger(n)||n<=0){alert('请输入有效日期和正整数数量');return}
-  const rows=await all(),old=rows.find(r=>r.date===date);
-  const newCount=(old?.count||0)+n;
-  // 已有日期保留原快照；旧记录没有快照时，不把当前竹林数追溯填入过去。
+  const date=$('date').value;
+  const raw=$('amount').value.trim();
+  if(!date||raw===''||!/^\d+$/.test(raw)){
+   alert('请输入有效日期和游戏当前显示的累计笋数');
+   return;
+  }
+  const cumulative=Number(raw);
+  if(!Number.isSafeInteger(cumulative)){
+   alert('累计笋数超出有效范围');
+   return;
+  }
+
+  const rows=await all();
+  // 用所选日期之前所有记录的每日新增数，重建此前的累计数。
+  // 这样原有历史记录无需迁移，也不会丢失。
+  const previousTotal=rows
+   .filter(r=>r.date<date)
+   .reduce((sum,r)=>sum+r.count,0);
+
+  const todayIncrease=cumulative-previousTotal;
+  if(todayIncrease<0){
+   alert(`当前累计数 ${cumulative} 小于此前记录累计数 ${previousTotal}，请检查日期或游戏数量。`);
+   return;
+  }
+
+  const old=rows.find(r=>r.date===date);
+  // 同一天再次保存时，直接更新当天记录，不重复累加。
   const snapshot=validCounts(old?.bambooCounts)?old.bambooCounts:(old?null:bambooCounts);
-  const record={date,count:newCount,bambooCounts:snapshot?{...snapshot}:null,bambooTotal:null,dropRate:null};
+  const record={
+   date,
+   count:todayIncrease,
+   bambooCounts:snapshot?{...snapshot}:null,
+   bambooTotal:null,
+   dropRate:null
+  };
   if(snapshot){
    const total=countTotal(snapshot);
    record.bambooTotal=total;
-   record.dropRate=total/newCount;
+   record.dropRate=todayIncrease>0?total/todayIncrease:null;
   }
+
   await put(record);
   $('amount').value='';
   await render();
+  alert(`保存成功！今日新增 ${todayIncrease} 笋。`);
  }catch(e){alert('保存失败：'+e.message)}
 };
 
@@ -324,7 +352,7 @@ $('importFile').onchange=async e=>{
  const file=e.target.files[0];if(!file)return;
  try{
   const obj=JSON.parse(await file.text());
-  if(!Array.isArray(obj.records)||!obj.records.every(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&Number.isSafeInteger(r.count)&&r.count>0))throw new Error('备份文件格式不正确');
+  if(!Array.isArray(obj.records)||!obj.records.every(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&Number.isSafeInteger(r.count)&&r.count>=0))throw new Error('备份文件格式不正确');
   if(!confirm('导入将合并备份记录；相同日期以备份中的记录覆盖。继续？'))return;
   for(const r of obj.records)await put(r);
   if(validCounts(obj.settings?.bambooCounts)){
